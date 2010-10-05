@@ -91,6 +91,7 @@ module Jabber
       end
 
       @commands = { :spec => [], :meta => {} }
+      @stashed_commands = { :spec => [], :meta => {} }
 
       add_command(
         :syntax      => 'help [<command>]',
@@ -256,6 +257,17 @@ module Jabber
     def status=(status)
       presence(@config[:presence], status, @config[:priority])
     end
+    
+    # Stash all commands so that they could be restored later
+    def stash_commands
+      @stashed_commands = @commands
+      @commands = { :spec => [], :meta => {} }
+    end
+    
+    # Restore stashed commands
+    def restore_commands
+      @commands = @stashed_commands
+    end
 
     private
 
@@ -277,19 +289,21 @@ module Jabber
       syntax = command[:syntax]
 
       @commands[:meta][name] = {
-        :syntax      => syntax.is_a?(Array) ? syntax : [syntax],
-        :description => command[:description],
-        :is_public   => command[:is_public] || false,
-        :is_alias    => is_alias
+        :syntax       => syntax.is_a?(Array) ? syntax : [syntax],
+        :description  => command[:description],
+        :is_public    => command[:is_public] || false,
+        :full_message => command[:full_message] || false,
+        :is_alias     => is_alias
       }
     end
 
     # Add a command spec
     def add_command_spec(command, callback) #:nodoc:
       @commands[:spec] << {
-        :regex     => command[:regex],
-        :callback  => callback,
-        :is_public => command[:is_public] || false
+        :regex        => command[:regex],
+        :callback     => callback,
+        :is_public    => command[:is_public] || false,
+        :full_message => command[:full_message] || false
       }
     end
 
@@ -352,8 +366,10 @@ module Jabber
           if command[:is_public] or is_master
             unless (message.strip =~ command[:regex]).nil?
               params = nil
-
-              if message.include? ' '
+              
+              if command[:full_message]
+                params = message
+              elsif message.include?(' ')
                 params = message.sub(/^\S+\s+(.*)$/, '\1')
               end
 
