@@ -407,13 +407,11 @@ module Jabber
               # Remove the Jabber resourse, if any
               sender = message.from.to_s.sub(/\/.+$/, '')
 
-              if message.type == :chat
-                parse_thread = Thread.new do
-                  parse_command(sender, message.body)
-                end
-
-                parse_thread.join
+              parse_thread = Thread.new do
+                parse_command(sender, message.body)
               end
+
+              parse_thread.join
             end
           end
 
