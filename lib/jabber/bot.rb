@@ -186,7 +186,9 @@ module Jabber
 
       presence(@config[:presence], @config[:status], @config[:priority])
 
-      deliver(@config[:master], "#{@config[:name]} reporting for duty.")
+      unless @config[:silent]
+        deliver(@config[:master], "#{@config[:name]} reporting for duty.")
+      end
 
       start_listener_thread
     end
@@ -381,9 +383,11 @@ module Jabber
           end
         end
 
-        response = "I don't understand '#{message.strip}' Try saying 'help' " +
-            "to see what commands I understand."
-        deliver(sender, response)
+        unless @config[:silent]
+          response = "I don't understand '#{message.strip}' Try saying 'help' " +
+              "to see what commands I understand."
+          deliver(sender, response)
+        end
       end
     end
 
