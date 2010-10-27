@@ -81,6 +81,7 @@ module Jabber
       @config = config
 
       @config[:is_public] ||= false
+      @config[:debug] ||= false
 
       if @config[:name].nil? or @config[:name].length == 0
         @config[:name] = @config[:jabber_id].sub(/@.+$/, '')
@@ -404,6 +405,12 @@ module Jabber
         loop do
           if @jabber.received_messages?
             @jabber.received_messages do |message|
+              
+              if @config[:debug]
+                p message.inspect
+                p message.body
+              end
+              
               # Remove the Jabber resourse, if any
               sender = message.from.to_s.sub(/\/.+$/, '')
 
